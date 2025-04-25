@@ -54,17 +54,8 @@ def Isogyric(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Re
             key = (atom.GetSymbol())
             atom_counts[key] = atom_counts.get(key, 0) + 1
         return atom_counts
-    #def count_atoms(mol):
-     #   hydrogens = 0
-      #  for atom in mo.GetAtoms():
-       #     hydrogens+= atom.GetTotalNumHs(includeNeighbors=True)
-        #return hydrogens
     def product_options(mol):
-        # Define wildcard libraries
-        # Sort the wildcard libraries by size (larger first)
-        
-        
-        # Search for matching substructures (reactants and products)
+      
     
     
         matched_products = []
@@ -113,7 +104,6 @@ def Isogyric(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Re
     
     
     
-        #return mapped_products
         unique_products = []
         unique_smiles = set()
         
@@ -273,11 +263,6 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
                 atom_counts[key] = atom_counts.get(key, 0) + 1
         return atom_counts
     def product_options(mol):
-        # Define wildcard libraries
-        # Sort the wildcard libraries by size (larger first)
-        
-        
-        # Search for matching substructures (reactants and products)
     
     
         matched_products = []
@@ -324,7 +309,6 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
     
     
     
-        #return mapped_products
         unique_products = []
         unique_smiles = set()
         
@@ -483,11 +467,6 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
             atom_counts[key] = atom_counts.get(key, 0) + 1
         return atom_counts
     def product_options(mol):
-        # Define wildcard libraries
-        # Sort the wildcard libraries by size (larger first)
-        
-        
-        # Search for matching substructures (reactants and products)
     
     
         matched_products = []
@@ -534,7 +513,6 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
     
     
     
-        #return mapped_products
         unique_products = []
         unique_smiles = set()
         
@@ -888,7 +866,6 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
         balanced_lhs = [(lhs_addition_options[j], solution_y[j]) for j in range(len(lhs_addition_options)) if solution_y[j] > 0]
         print("Solver status:", LpStatus[prob.status])
         return balanced_rhs, balanced_lhs, LpStatus[prob.status]
-        #return rhs_options, lhs_addition_options
     
     
     def count_bonds(mol):
@@ -911,7 +888,6 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
         return bond_counts
     
     def count_hydrogens(mol):
-        #mol = Chem.AddHs(mol)
         hydrogen_counts = {}
         mol = Chem.MolFromSmiles(Chem.MolToSmiles(mol))
         for atom in mol.GetAtoms():
@@ -921,112 +897,112 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
     return Balance(input_mol)
 
 
-def all_test(input_mol):
-    balanced_rhs, balanced_lhs = Isogyric(input_mol)
-
-    print("Balanced Isogyric RHS molecules with coefficients:")
-    for mol, coeff in balanced_rhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
-
-    print("\nBalanced Isogyric LHS molecules with coefficients:")
-    for mol, coeff in balanced_lhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-    
-    print("\nIsodesmic:")
-    
-    balanced_rhs, balanced_lhs = Isodesmic(input_mol)
-
-    print("Balanced Isodesmic RHS molecules with coefficients:")
-    for mol, coeff in balanced_rhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
-
-    print("\nBalanced Isodesmic LHS molecules with coefficients:")
-    for mol, coeff in balanced_lhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-    
-    
-    print("\nHypohomodesmotic:")
-    balanced_rhs, balanced_lhs = Hypohomodesmotic(input_mol)
-    
-    print("Balanced Hypohomodesmotic RHS molecules with coefficients:")
-    for mol, coeff in balanced_rhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-    
-    print("\nBalanced Hypohomodesmotic LHS molecules with coefficients:")
-    for mol, coeff in balanced_lhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-    
-    print("\nHomodesmotic:")
-    
-    balanced_rhs, balanced_lhs = Homodesmotic(input_mol)
-
-    print("Balanced Homodesmotic RHS molecules with coefficients:")
-    for mol, coeff in balanced_rhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
-
-    print("\nBalanced Homodesmotic LHS molecules with coefficients:")
-    for mol, coeff in balanced_lhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-        
-        
-def isog_test(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
-    balanced_rhs, balanced_lhs = Isogyric(input_mol, lhs_required = lhs_required, rhs_required = rhs_required, Substruct=Substruct, Replacement = Replacement)
-    print("Balanced RHS molecules with coefficients:")
-    for mol, coeff in balanced_rhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
-
-    print("\nBalanced LHS molecules with coefficients:")
-    for mol, coeff in balanced_lhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
-
-        
-
-
-def isod_test(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
-    balanced_rhs, balanced_lhs = Isodesmic(input_mol, lhs_required = lhs_required, rhs_required = rhs_required, Substruct=Substruct, Replacement = Replacement)
-    print("Balanced RHS molecules with coefficients:")
-    for mol, coeff in balanced_rhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
-
-    print("\nBalanced LHS molecules with coefficients:")
-    for mol, coeff in balanced_lhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
-
-        
- 
-        
-def hypo_test(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
-    balanced_rhs, balanced_lhs = Hypohomodesmotic(input_mol, lhs_required = lhs_required, rhs_required = rhs_required, Substruct=Substruct, Replacement = Replacement)
-    print("Balanced RHS molecules with coefficients:")
-    for mol, coeff in balanced_rhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
-
-    print("\nBalanced LHS molecules with coefficients:")
-    for mol, coeff in balanced_lhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
-
-        
-
-def homo_test(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
-    balanced_rhs, balanced_lhs = Homodesmotic(input_mol, lhs_required = lhs_required, rhs_required = rhs_required, Substruct=Substruct, Replacement = Replacement)
-    print("Balanced RHS molecules with coefficients:")
-    for mol, coeff in balanced_rhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
-
-    print("\nBalanced LHS molecules with coefficients:")
-    for mol, coeff in balanced_lhs:
-        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
-
+#def all_test(input_mol):
+#    balanced_rhs, balanced_lhs = Isogyric(input_mol)
+#
+#    print("Balanced Isogyric RHS molecules with coefficients:")
+#    for mol, coeff in balanced_rhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
+#
+#    print("\nBalanced Isogyric LHS molecules with coefficients:")
+#    for mol, coeff in balanced_lhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#    
+#    print("\nIsodesmic:")
+#    
+#    balanced_rhs, balanced_lhs = Isodesmic(input_mol)
+#
+#    print("Balanced Isodesmic RHS molecules with coefficients:")
+#    for mol, coeff in balanced_rhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
+#
+#    print("\nBalanced Isodesmic LHS molecules with coefficients:")
+#    for mol, coeff in balanced_lhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#    
+#    
+#    print("\nHypohomodesmotic:")
+#    balanced_rhs, balanced_lhs = Hypohomodesmotic(input_mol)
+#    
+#    print("Balanced Hypohomodesmotic RHS molecules with coefficients:")
+#    for mol, coeff in balanced_rhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#    
+#    print("\nBalanced Hypohomodesmotic LHS molecules with coefficients:")
+#    for mol, coeff in balanced_lhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#    
+#    print("\nHomodesmotic:")
+#    
+#    balanced_rhs, balanced_lhs = Homodesmotic(input_mol)
+#
+#    print("Balanced Homodesmotic RHS molecules with coefficients:")
+#    for mol, coeff in balanced_rhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
+#
+#    print("\nBalanced Homodesmotic LHS molecules with coefficients:")
+#    for mol, coeff in balanced_lhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#        
+#        
+#def isog_test(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
+#    balanced_rhs, balanced_lhs = Isogyric(input_mol, lhs_required = lhs_required, rhs_required = rhs_required, Substruct=Substruct, Replacement = Replacement)
+#    print("Balanced RHS molecules with coefficients:")
+#    for mol, coeff in balanced_rhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
+#
+#    print("\nBalanced LHS molecules with coefficients:")
+#    for mol, coeff in balanced_lhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
+#
+#        
+#
+#
+#def isod_test(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
+#    balanced_rhs, balanced_lhs = Isodesmic(input_mol, lhs_required = lhs_required, rhs_required = rhs_required, Substruct=Substruct, Replacement = Replacement)
+#    print("Balanced RHS molecules with coefficients:")
+#    for mol, coeff in balanced_rhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
+#
+#    print("\nBalanced LHS molecules with coefficients:")
+#    for mol, coeff in balanced_lhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
+#
+#        
+# 
+#        
+#def hypo_test(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
+#    balanced_rhs, balanced_lhs = Hypohomodesmotic(input_mol, lhs_required = lhs_required, rhs_required = rhs_required, Substruct=Substruct, Replacement = Replacement)
+#    print("Balanced RHS molecules with coefficients:")
+#    for mol, coeff in balanced_rhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
+#
+#    print("\nBalanced LHS molecules with coefficients:")
+#    for mol, coeff in balanced_lhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
+#
+#        
+#
+#def homo_test(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
+#    balanced_rhs, balanced_lhs = Homodesmotic(input_mol, lhs_required = lhs_required, rhs_required = rhs_required, Substruct=Substruct, Replacement = Replacement)
+#    print("Balanced RHS molecules with coefficients:")
+#    for mol, coeff in balanced_rhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
+#
+#    print("\nBalanced LHS molecules with coefficients:")
+#    for mol, coeff in balanced_lhs:
+#        print(f"{coeff} * {Chem.MolToSmiles(mol)}")
+#
 
 
 
