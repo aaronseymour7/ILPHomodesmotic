@@ -10,8 +10,22 @@ from pulp import LpProblem, LpVariable, lpSum, LpMinimize, LpInteger, PULP_CBC_C
 
 
 
-def Isogyric(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
+def kekulize_and_make_aliphatic(mol):
+    try:
+        mol = Chem.Mol(mol)
+        Chem.Kekulize(mol, clearAromaticFlags=True)
+        for atom in mol.GetAtoms():
+            atom.SetIsAromatic(False)
+        for bond in mol.GetBonds():
+            bond.SetIsAromatic(False)
+        mol.UpdatePropertyCache(strict=False)
+        mol = Chem.AddHs(mol)
+        return mol 
+    except Chem.KekulizeException:
+        return None  
 
+def Isogyric(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
+    input_mol = kekulize_and_make_aliphatic(input_mol)
     wildcard_reactants = [
         Chem.MolFromSmiles("[H][H]"),
     ]
@@ -36,9 +50,15 @@ def Isogyric(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Re
             print(f"No atom mapping found for substructure: {Chem.MolToSmiles(matched_structure)}")
         return matched_structure
     def match_substructure(mol, sub):
-        p = Chem.AdjustQueryParameters.NoAdjustments()
+        p = Chem.AdjustQueryParameters()
         p.makeDummiesQueries = True
+        p.adjustDegree = False
+        p.adjustRingCount = False
+        p.adjustAromatic = False
+        p.adjustValence = False
         substructure = Chem.AdjustQueryProperties(sub, p)
+    
+
         match = mol.HasSubstructMatch(substructure)
         return match
                                
@@ -55,7 +75,7 @@ def Isogyric(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Re
             atom_counts[key] = atom_counts.get(key, 0) + 1
         return atom_counts
     def product_options(mol):
-      
+
     
     
         matched_products = []
@@ -104,6 +124,7 @@ def Isogyric(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Re
     
     
     
+        #return mapped_products
         unique_products = []
         unique_smiles = set()
         
@@ -199,20 +220,22 @@ def Isogyric(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Re
     
         balanced_rhs = [(rhs_options[i], solution_x[i]) for i in range(len(rhs_options)) if solution_x[i] > 0]
         balanced_lhs = [(lhs_addition_options[j], solution_y[j]) for j in range(len(lhs_addition_options)) if solution_y[j] > 0]
-        print("Status:", LpStatus[prob.status])
+        print("Solver status:", LpStatus[prob.status])
         return balanced_rhs, balanced_lhs, LpStatus[prob.status]
     return Balance(input_mol)
 
 
 def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
-    input_mol = Chem.RemoveHs(input_mol)
+    
+    input_mol = kekulize_and_make_aliphatic(input_mol)
+    #input_mol = Chem.RemoveHs(input_mol)
     wildcard_reactants = [
-        Chem.MolFromSmiles("[*]"),
+        Chem.MolFromSmarts("[*]"),
     ]
     wildcard_products = [
-        Chem.MolFromSmiles("[*][*]"),
-        Chem.MolFromSmiles("[*]=[*]"),
-        Chem.MolFromSmiles("[*]#[*]"),
+        Chem.MolFromSmarts("[*]-[*]"),
+        Chem.MolFromSmarts("[*]=[*]"),
+        Chem.MolFromSmarts("[*]#[*]"),
     ]
     wildcard_reactants = sorted(wildcard_reactants, key=lambda x: x.GetNumAtoms(), reverse=True)
     wildcard_products = sorted(wildcard_products, key=lambda x: x.GetNumAtoms(), reverse=True)
@@ -224,6 +247,10 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
     def map_atoms(matched_structure, mol):
         p = Chem.AdjustQueryParameters.NoAdjustments()
         p.makeDummiesQueries = True
+        p.adjustDegree = False
+        p.adjustRingCount = False
+        p.adjustAromatic = False
+        p.adjustValence = False
         query = Chem.AdjustQueryProperties(matched_structure, p) 
         matches = mol.GetSubstructMatches(query)
         if matches:
@@ -232,9 +259,15 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
             print(f"No atom mapping found for substructure: {Chem.MolToSmiles(matched_structure)}")
         return matched_structure
     def match_substructure(mol, sub):
-        p = Chem.AdjustQueryParameters.NoAdjustments()
+        p = Chem.AdjustQueryParameters()
         p.makeDummiesQueries = True
+        p.adjustDegree = False
+        p.adjustRingCount = False
+        p.adjustAromatic = False
+        p.adjustValence = False
         substructure = Chem.AdjustQueryProperties(sub, p)
+    
+
         match = mol.HasSubstructMatch(substructure)
         return match
                                
@@ -263,6 +296,11 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
                 atom_counts[key] = atom_counts.get(key, 0) + 1
         return atom_counts
     def product_options(mol):
+        # Define wildcard libraries
+        # Sort the wildcard libraries by size (larger first)
+        
+        
+        # Search for matching substructures (reactants and products)
     
     
         matched_products = []
@@ -309,6 +347,7 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
     
     
     
+        #return mapped_products
         unique_products = []
         unique_smiles = set()
         
@@ -317,7 +356,7 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
                 smiles = Chem.MolToSmiles(prod)  # Convert to SMILES for easy comparison
                 if smiles not in unique_smiles:
                     unique_smiles.add(smiles)
-                    unique_products.append(prod)
+                    unique_products.append(Chem.AddHs(prod))
     
         return unique_products
     def reactant_options(unique_products):
@@ -331,12 +370,13 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
                 # Add explicit hydrogens
                 Chem.SanitizeMol(mol)
                 mol = mol.GetMol()
-                unique_atoms.add(mol)  # Add atom to set (duplicates are automatically ignored)
+                unique_atoms.add(Chem.AddHs(mol))  # Add atom to set (duplicates are automatically ignored)
         return list(unique_atoms)  # Convert back to list for return
     def Balance(input_mol):
         prob = LpProblem("Isodesmic_Balancing", LpMinimize)
-        
-        dummy = input_mol
+        input_mol = Chem.AddHs(kekulize_and_make_aliphatic(input_mol))
+        dummy = Chem.AddHs(kekulize_and_make_aliphatic(input_mol))
+        #dummy = kekulize_and_make_aliphatic(dummy)
         if Substruct and Replacement:
             if isinstance(Substruct, list) and isinstance(Replacement, list):
                 for sub, rep in zip(Substruct, Replacement):
@@ -407,11 +447,13 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
         balanced_rhs = [(rhs_options[i], solution_x[i]) for i in range(len(rhs_options)) if solution_x[i] > 0]
         balanced_lhs = [(lhs_addition_options[j], solution_y[j]) for j in range(len(lhs_addition_options)) if solution_y[j] > 0]
         print("Solver status:", LpStatus[prob.status])
-        return balanced_rhs, balanced_lhs, LpStatus[prob.status]
+        return balanced_rhs, balanced_lhs, LpStatus[prob.status] 
     return Balance(input_mol)
+
 
     
 def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
+    input_mol = kekulize_and_make_aliphatic(input_mol)
     wildcard_reactants = [
         Chem.MolFromSmiles("[*][*]"),
         Chem.MolFromSmiles("[*]=[*]"),
@@ -444,9 +486,15 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
             print(f"No atom mapping found for substructure: {Chem.MolToSmiles(matched_structure)}")
         return matched_structure
     def match_substructure(mol, sub):
-        p = Chem.AdjustQueryParameters.NoAdjustments()
+        p = Chem.AdjustQueryParameters()
         p.makeDummiesQueries = True
+        p.adjustDegree = False
+        p.adjustRingCount = False
+        p.adjustAromatic = False
+        p.adjustValence = False
         substructure = Chem.AdjustQueryProperties(sub, p)
+    
+
         match = mol.HasSubstructMatch(substructure)
         return match
                                
@@ -467,6 +515,11 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
             atom_counts[key] = atom_counts.get(key, 0) + 1
         return atom_counts
     def product_options(mol):
+        # Define wildcard libraries
+        # Sort the wildcard libraries by size (larger first)
+        
+        
+        # Search for matching substructures (reactants and products)
     
     
         matched_products = []
@@ -513,6 +566,7 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
     
     
     
+        #return mapped_products
         unique_products = []
         unique_smiles = set()
         
@@ -571,7 +625,8 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
     def Balance(input_mol):
         prob = LpProblem("Hypohomodesmotic_Balancing", LpMinimize)
         
-        dummy = input_mol
+        dummy = kekulize_and_make_aliphatic(input_mol)
+        
         if Substruct and Replacement:
             if isinstance(Substruct, list) and isinstance(Replacement, list):
                 for sub, rep in zip(Substruct, Replacement):
@@ -651,6 +706,7 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
 
 
 def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
+    input_mol = kekulize_and_make_aliphatic(input_mol)
     wildcard_reactants = [
         Chem.MolFromSmiles("[*]=[*]"),
         Chem.MolFromSmiles("[*][*]=[*][*]"),
@@ -690,9 +746,15 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
             print(f"No atom mapping found for substructure: {Chem.MolToSmiles(matched_structure)}")
         return matched_structure
     def match_substructure(mol, sub):
-        p = Chem.AdjustQueryParameters.NoAdjustments()
+        p = Chem.AdjustQueryParameters()
         p.makeDummiesQueries = True
+        p.adjustDegree = False
+        p.adjustRingCount = False
+        p.adjustAromatic = False
+        p.adjustValence = False
         substructure = Chem.AdjustQueryProperties(sub, p)
+    
+
         match = mol.HasSubstructMatch(substructure)
         return match
     def append_unique(mol_list, mol):
@@ -702,10 +764,12 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
         mol_list.append(mol)
             
     def product_options(mol):
+        # Define wildcard libraries
+        # Sort the wildcard libraries by size (larger first)
         
         
         # Search for matching substructures (reactants and products)
-        mol= Chem.RemoveHs(mol)
+        #mol= Chem.RemoveHs(mol)
         matched_products = []
         for product in wildcard_products:
             if match_substructure(mol, product):
@@ -774,6 +838,7 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
                   # Convert back to immutable Mol
     
     
+        # Ensure uniqueness of mapped reactants
         unique_reactants = []
         unique_smiles = set()
         
@@ -858,7 +923,7 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
         
         solver = PULP_CBC_CMD(msg=False)
         prob.solve(solver)
-    
+        #prob.solve()
         solution_x = [int(var.varValue) for var in x_vars]
         solution_y = [int(var.varValue) for var in y_vars]
     
@@ -866,6 +931,7 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
         balanced_lhs = [(lhs_addition_options[j], solution_y[j]) for j in range(len(lhs_addition_options)) if solution_y[j] > 0]
         print("Solver status:", LpStatus[prob.status])
         return balanced_rhs, balanced_lhs, LpStatus[prob.status]
+        #return rhs_options, lhs_addition_options
     
     
     def count_bonds(mol):
@@ -888,6 +954,7 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
         return bond_counts
     
     def count_hydrogens(mol):
+        #mol = Chem.AddHs(mol)
         hydrogen_counts = {}
         mol = Chem.MolFromSmiles(Chem.MolToSmiles(mol))
         for atom in mol.GetAtoms():
