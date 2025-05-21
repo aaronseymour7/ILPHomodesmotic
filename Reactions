@@ -708,28 +708,28 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
 def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
     input_mol = kekulize_and_make_aliphatic(input_mol)
     wildcard_reactants = [
-        Chem.MolFromSmiles("[*]=[*]"),
-        Chem.MolFromSmiles("[*][*]=[*][*]"),
-        Chem.MolFromSmiles("[*][*]"),
-        Chem.MolFromSmiles("[*]#[*]"),
-        Chem.MolFromSmiles("[*]=[*][*]"),
-        Chem.MolFromSmiles("[*]#[*][*]"),
+        Chem.MolFromSmarts("[*]=[*]"),
+        Chem.MolFromSmarts("[*][*]=[*][*]"),
+        Chem.MolFromSmarts("[*]-[*]"),
+        Chem.MolFromSmarts("[*]#[*]"),
+        Chem.MolFromSmarts("[*]=[*][*]"),
+        Chem.MolFromSmarts("[*]#[*][*]"),
     ]
     
     wildcard_products = [
-        Chem.MolFromSmiles("[*][*][*]"),
-        Chem.MolFromSmiles("[*]=[*][*]"),
-        Chem.MolFromSmiles("[*][*]#[*]"),
-        Chem.MolFromSmiles("[*]=[*]=[*]"),
-        Chem.MolFromSmiles("[*][*]([*])[*]"),
-        Chem.MolFromSmiles("[*][*](=[*])[*]"),
-        Chem.MolFromSmiles("[*][*@]([*])([*])[*]"),
-        Chem.MolFromSmiles("[*]=[*]=[*]=[*]"),
-        Chem.MolFromSmiles("[*]=[*][*]#[*]"),
-        Chem.MolFromSmiles("[*]#[*][*]#[*]"),
-        Chem.MolFromSmiles("[*][*](=[*])[*]=[*]"),
-        Chem.MolFromSmiles("[*]=[*][*]=[*]"),
-        Chem.MolFromSmiles("[*][*](=[*])[*]#[*]"),
+        Chem.MolFromSmarts("[*]-[*]-[*]"),
+        Chem.MolFromSmarts("[*]=[*]-[*]"),
+        Chem.MolFromSmarts("[*]-[*]#[*]"),
+        Chem.MolFromSmarts("[*]=[*]=[*]"),
+        Chem.MolFromSmarts("[*]-[*](-[*])-[*]"),
+        Chem.MolFromSmarts("[*]-[*](=[*])-[*]"),
+        Chem.MolFromSmarts("[*]-[*@](-[*])(-[*])-[*]"),
+        Chem.MolFromSmarts("[*]=[*]=[*]=[*]"),
+        Chem.MolFromSmarts("[*]=[*]-[*]#[*]"),
+        Chem.MolFromSmarts("[*]#[*]-[*]#[*]"),
+        Chem.MolFromSmarts("[*]-[*](=[*])-[*]=[*]"),
+        Chem.MolFromSmarts("[*]=[*]-[*]=[*]"),
+        Chem.MolFromSmarts("[*]-[*](=[*])-[*]#[*]"),
         Chem.MolFromSmarts("[*]=[*]-[!#6]-[*]=[*]"),
     ]
     
