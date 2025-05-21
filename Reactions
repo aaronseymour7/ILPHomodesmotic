@@ -730,7 +730,7 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
         Chem.MolFromSmiles("[*][*](=[*])[*]=[*]"),
         Chem.MolFromSmiles("[*]=[*][*]=[*]"),
         Chem.MolFromSmiles("[*][*](=[*])[*]#[*]"),
-        #Chem.MolFromSmiles("[*][*]=[*][*]"),
+        Chem.MolFromSmarts("[*]=[*]-[!#6]-[*]=[*]"),
     ]
     
     wildcard_reactants = sorted(wildcard_reactants, key=lambda x: x.GetNumAtoms(), reverse=True)
