@@ -74,8 +74,17 @@ def Isogyric(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Re
             key = (atom.GetSymbol())
             atom_counts[key] = atom_counts.get(key, 0) + 1
         return atom_counts
+    #def count_atoms(mol):
+     #   hydrogens = 0
+      #  for atom in mo.GetAtoms():
+       #     hydrogens+= atom.GetTotalNumHs(includeNeighbors=True)
+        #return hydrogens
     def product_options(mol):
-
+        # Define wildcard libraries
+        # Sort the wildcard libraries by size (larger first)
+        
+        
+        # Search for matching substructures (reactants and products)
     
     
         matched_products = []
@@ -236,6 +245,7 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
         Chem.MolFromSmarts("[*]-[*]"),
         Chem.MolFromSmarts("[*]=[*]"),
         Chem.MolFromSmarts("[*]#[*]"),
+        #Chem.MolFromSmarts("[*:1]:[*:2]")
     ]
     wildcard_reactants = sorted(wildcard_reactants, key=lambda x: x.GetNumAtoms(), reverse=True)
     wildcard_products = sorted(wildcard_products, key=lambda x: x.GetNumAtoms(), reverse=True)
@@ -635,6 +645,11 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
                 dummy = Chem.ReplaceSubstructs(dummy, Substruct, Replacement, True)[0]
         rhs_options = product_options(dummy)
         lhs_addition_options = reactant_options(rhs_options)
+        for i, opt in enumerate(rhs_options):
+            rhs_options[i] = Chem.AddHs(opt)
+
+        for i, opt in enumerate(lhs_addition_options):
+            lhs_addition_options[i] = Chem.AddHs(opt)
         lhs_addition_options.append(input_mol)
         input_index = lhs_addition_options.index(input_mol)
         if lhs_required:
@@ -864,6 +879,7 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
                 dummy = Chem.ReplaceSubstructs(dummy, Substruct, Replacement, True)[0]
         rhs_options = product_options(dummy)
         lhs_addition_options = reactant_options(rhs_options)
+        
         lhs_addition_options.append(input_mol)
         input_index = lhs_addition_options.index(input_mol)
         if lhs_required:
@@ -962,7 +978,6 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
             hydrogen_counts[key] = hydrogen_counts.get(key, 0) + 1
         return hydrogen_counts
     return Balance(input_mol)
-
 
 #def all_test(input_mol):
 #    balanced_rhs, balanced_lhs = Isogyric(input_mol)
