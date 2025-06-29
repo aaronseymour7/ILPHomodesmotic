@@ -294,23 +294,27 @@ def Isogyric(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Re
     
         balanced_rhs = [(rhs_options[i], solution_x[i]) for i in range(len(rhs_options)) if solution_x[i] > 0]
         balanced_lhs = [(lhs_addition_options[j], solution_y[j]) for j in range(len(lhs_addition_options)) if solution_y[j] > 0]
-        print("Solver status:", LpStatus[prob.status])
+        #print("Solver status:", LpStatus[prob.status])
         return balanced_rhs, balanced_lhs, LpStatus[prob.status]
     return Balance(input_mol)
             
             
             
-def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
-    original_mol= input_mol
-    input_mol, wildcard_reactants, wildcard_products = get_fragments(input_mol,2)
+def Isodesmic(nput_mol, lhs_required=None, rhs_required=None, Substruct=None, Replacement=None):
+    input_mol = kekulize_and_make_aliphatic(nput_mol)
     def count_bonds(mol):
         bond_counts = {}
         for bond in mol.GetBonds():
+            if bond.GetBeginAtom().GetSymbol()== 'H' or bond.GetEndAtom().GetSymbol()== 'H':
+                continue 
             atom1 = bond.GetBeginAtom()
             atom2 = bond.GetEndAtom()
     
             # Create a tuple where atom order doesn't matter by sorting the atoms based on their symbol and hybridization
-            atom_pair = tuple(sorted([atom1.GetSymbol(), atom2.GetSymbol()]))
+            atom_pair = tuple(sorted(
+                [(atom1.GetSymbol()), 
+                 (atom2.GetSymbol())]
+            ))
     
             bond_type = (atom_pair, bond.GetBondType())
             bond_counts[bond_type] = bond_counts.get(bond_type, 0) + 1
@@ -323,24 +327,55 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
             atom_counts[key] = atom_counts.get(key, 0) + 1
             return atom_counts
         for atom in mol.GetAtoms():
-            if atom.GetSymbol() !='H':
-                key = (atom.GetSymbol())
-                atom_counts[key] = atom_counts.get(key, 0) + 1
+
+            key = (atom.GetSymbol())
+            atom_counts[key] = atom_counts.get(key, 0) + 1
         return atom_counts
-            
+    def product_frags(atom_pair, bond_type):
+        mol = Chem.RWMol()
+
+        a1_idx = mol.AddAtom(Chem.Atom(atom_pair[0]))
+        a2_idx = mol.AddAtom(Chem.Atom(atom_pair[1]))
+
+        mol.AddBond(a1_idx, a2_idx, bond_type)
+        mol = mol.GetMol()
+        Chem.SanitizeMol(mol)       
+        mol = Chem.AddHs(mol)
+
+        return mol
+    def unique_atom_hydrides(mol):
+        seen_elements = set()
+        hydride_mols = []
+
+        for atom in mol.GetAtoms():
+            sym = atom.GetSymbol()
+            if sym == 'H' or sym in seen_elements:
+                continue
+            seen_elements.add(sym)
+            try:
+                m = Chem.MolFromSmiles(sym)
+                m = Chem.AddHs(m)         
+                hydride_mols.append(( m))
+            except:
+                print(f"Could not generate molecule for {sym}")
+
+        return hydride_mols
     def Balance(input_mol):
         prob = LpProblem("Isodesmic_Balancing", LpMinimize)
-        input_mol = Chem.AddHs(kekulize_and_make_aliphatic(input_mol))
-        dummy = Chem.AddHs(kekulize_and_make_aliphatic(input_mol))
-        #dummy = kekulize_and_make_aliphatic(dummy)
+        dummy = input_mol
         if Substruct and Replacement:
             if isinstance(Substruct, list) and isinstance(Replacement, list):
                 for sub, rep in zip(Substruct, Replacement):
                     dummy = Chem.ReplaceSubstructs(dummy, sub, rep, True)[0]
             elif isinstance(Substruct, Chem.Mol) and isinstance(Replacement, Chem.Mol):
                 dummy = Chem.ReplaceSubstructs(dummy, Substruct, Replacement, True)[0]
-        rhs_options = product_options(dummy,wildcard_products)
-        lhs_addition_options = reactant_options(rhs_options, wildcard_reactants)
+        rhs_options = []
+        prod_options = count_bonds(input_mol)
+        for opt in prod_options:
+            rhs_options.append(product_frags(*opt))
+        lhs_addition_options = []
+        lhs_addition_options = unique_atom_hydrides(input_mol)
+        lhs_addition_options.append(Chem.MolFromSmiles("[H][H]"))
         lhs_addition_options.append(input_mol)
         input_index = lhs_addition_options.index(input_mol)
         if lhs_required:
@@ -349,7 +384,6 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
                     lhs_addition_options.append(mol)
             elif isinstance (lhs_required, Chem.Mol):
                     lhs_addition_options.append(lhs_required)
-                
         if rhs_required:
             if isinstance (rhs_required, list):
                 for mol in rhs_required:
@@ -358,9 +392,11 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
                 append_unique(rhs_options, rhs_required)
         
 
+
         x_vars = [LpVariable(f"x_{i}", 0, None, LpInteger) for i in range(len(rhs_options))]
         y_vars = [LpVariable(f"y_{j}", 0, None, LpInteger) for j in range(len(lhs_addition_options))]
         prob += y_vars[input_index] == 1       
+        
         if lhs_required:
             if isinstance (lhs_required, list):
                 for mol in lhs_required:
@@ -377,6 +413,10 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
             elif isinstance (rhs_required, Chem.Mol):
                 rhs_r_idx = rhs_options.index(rhs_required) 
                 prob += x_vars[rhs_r_idx] == 1
+    
+        if not rhs_options:
+            print("Error: No RHS molecules found.")
+            return [], []
     
         if not rhs_options:
             print("Error: No RHS molecules found.")
@@ -402,8 +442,10 @@ def Isodesmic(input_mol, lhs_required=None, rhs_required=None, Substruct=None, R
     
         balanced_rhs = [(rhs_options[i], solution_x[i]) for i in range(len(rhs_options)) if solution_x[i] > 0]
         balanced_lhs = [(lhs_addition_options[j], solution_y[j]) for j in range(len(lhs_addition_options)) if solution_y[j] > 0]
-        print("Solver status:", LpStatus[prob.status])
-        return balanced_rhs, balanced_lhs, LpStatus[prob.status] 
+        #print("Solver status:", LpStatus[prob.status])
+        return balanced_rhs, balanced_lhs, LpStatus[prob.status]
+    #for m in unique_atom_hydrides(input_mol):
+       # print(Chem.MolToSmiles(m))
     return Balance(input_mol)
             
             
@@ -513,7 +555,7 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
     
         balanced_rhs = [(rhs_options[i], solution_x[i]) for i in range(len(rhs_options)) if solution_x[i] > 0]
         balanced_lhs = [(lhs_addition_options[j], solution_y[j]) for j in range(len(lhs_addition_options)) if solution_y[j] > 0]
-        print("Solver status:", LpStatus[prob.status])
+        #print("Solver status:", LpStatus[prob.status])
         return balanced_rhs, balanced_lhs, LpStatus[prob.status]
     return Balance(input_mol)
 
@@ -599,11 +641,7 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
             elif isinstance (rhs_required, Chem.Mol):
                 rhs_r_idx = rhs_options.index(rhs_required) 
                 prob += x_vars[rhs_r_idx] == 1
-        
-        
-    
-    
-    
+            
         if not rhs_options:
             print("Error: No RHS molecules found.")
             return [], []
@@ -628,10 +666,9 @@ def Homodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=None
     
         balanced_rhs = [(rhs_options[i], solution_x[i]) for i in range(len(rhs_options)) if solution_x[i] > 0]
         balanced_lhs = [(lhs_addition_options[j], solution_y[j]) for j in range(len(lhs_addition_options)) if solution_y[j] > 0]
-        print("Solver status:", LpStatus[prob.status])
+        #print("Solver status:", LpStatus[prob.status])
         return balanced_rhs, balanced_lhs, LpStatus[prob.status]
     return Balance(x)
-
 
 
 def isogyric_count(mol):
