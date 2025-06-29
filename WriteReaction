@@ -862,13 +862,11 @@ if status == 'Optimal':
     if args.action_type  == 'view':
         print("-----------Reactants-----------")
         for mol, coeff in lhs:
-            geom = geom_from_rdkit(mol)
             name = Chem.MolToSmiles(mol)
             print(f"({coeff})*{name}")
             Li+=1
         print("-----------Products-----------")
         for mol, coeff in rhs:
-            geom = geom_from_rdkit(mol)
             name = Chem.MolToSmiles(mol)
             print(f"({coeff})*{name}")
             Ri+=1
