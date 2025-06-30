@@ -90,6 +90,8 @@ def get_fragments(input_mol,level):
             #Chem.MolFromSmiles("[*][*]=[*][*]"),
             Chem.MolFromSmarts("[*]#[*]-[!#6]-[*]=[*]"),
             Chem.MolFromSmarts("[*]#[*]-[!#6]-[*]#[*]"),
+            Chem.MolFromSmiles("[*]([*])[*]=[*]")
+
         ]
     wildcard_reactants = sorted(wildcard_reactants, key=lambda x: x.GetNumAtoms(), reverse=True)
     wildcard_products = sorted(wildcard_products, key=lambda x: x.GetNumAtoms(), reverse=True)
