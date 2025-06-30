@@ -482,7 +482,8 @@ def Hypohomodesmotic(input_mol, lhs_required=None, rhs_required=None, Substruct=
             elif isinstance(Substruct, Chem.Mol) and isinstance(Replacement, Chem.Mol):
                 dummy = Chem.ReplaceSubstructs(dummy, Substruct, Replacement, True)[0]
         rhs_options = product_options(dummy, wildcard_products)
-        
+        rhs_options.append(Chem.MolFromSmiles('CC=[NH]'))
+
         lhs_addition_options = reactant_options(rhs_options, wildcard_reactants)
 
         for i, opt in enumerate(rhs_options):
